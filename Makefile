@@ -4,6 +4,7 @@ TAR_VERSION   ?= 1.35
 GZIP_VERSION  ?= 1.13
 BZIP2_VERSION ?= 1.0.8
 XZ_VERSION    ?= 5.8.1
+MUSL_BLUEYOS_REF ?= 9c0ef094cfc1a330aae80e16d2426ab303c12cf4
 
 BUILD_DIR ?= build
 ABS_BUILD_DIR := $(if $(filter /%,$(BUILD_DIR)),$(BUILD_DIR),$(CURDIR)/$(BUILD_DIR))
@@ -44,7 +45,11 @@ INSTALL_SYSROOT := $(shell BLUEYOS_SYSROOT="$(BLUEYOS_SYSROOT)" MUSL_PREFIX="$(M
 all: $(TOOLS)
 
 musl:
-@bash tools/build-musl.sh --prefix="$(MUSL_PREFIX)"
+@if [ -d "$(MUSL_PREFIX)/include" ] && [ -f "$(MUSL_PREFIX)/lib/libc.a" ] && [ ! -d "$(MUSL_PREFIX)/.git" ]; then \
+echo "[MUSL] existing musl sysroot detected under $(MUSL_PREFIX); skipping build"; \
+else \
+bash tools/build-musl.sh --prefix="$(MUSL_PREFIX)" --ref="$(MUSL_BLUEYOS_REF)"; \
+fi
 
 define check_musl
 @if [ ! -d "$(MUSL_PREFIX)/include" ] || [ ! -f "$(MUSL_PREFIX)/lib/libc.a" ]; then echo "[MUSL] musl sysroot not found under $(MUSL_PREFIX)"; echo "       Run: make musl (or provide MUSL_PREFIX=/path/to/sysroot)"; exit 1; fi
@@ -68,7 +73,15 @@ xz:
 
 dpk:
 @command -v dpkbuild >/dev/null 2>&1 || { echo "[DPK] dpkbuild not found on PATH. Build from nzmacgeek/dimsim"; exit 1; }
-@for pkg in $(TOOLS); do echo "[DPK] Building $$pkg"; dpkbuild build "$$pkg" --output "$(ABS_BUILD_DIR)/dpk"; done
+@for pkg in $(TOOLS); do \
+echo "[DPK] Building $$pkg"; \
+tmp_pkg="$(ABS_BUILD_DIR)/dpk-src/$$pkg"; \
+rm -rf "$$tmp_pkg"; \
+mkdir -p "$(ABS_BUILD_DIR)/dpk-src"; \
+cp -a "$$pkg" "$$tmp_pkg"; \
+find "$$tmp_pkg/payload" -name '.gitkeep' -type f -delete; \
+dpkbuild build "$$tmp_pkg" --output "$(ABS_BUILD_DIR)/dpk"; \
+done
 @ls -1 "$(ABS_BUILD_DIR)"/dpk/*.dpk
 
 install: all install-staged
@@ -81,7 +94,7 @@ endef
 install-staged:
 @$(call check_install_sysroot)
 @mkdir -p -- "$(INSTALL_SYSROOT)"
-@for payload in tar/payload gzip/payload bzip2/payload xz/payload; do echo "[INSTALL] $$payload -> $(INSTALL_SYSROOT)"; ( cd "$$payload" && tar -cf - . ) | ( cd "$(INSTALL_SYSROOT)" && tar -xpf - ); done
+@for payload in tar/payload gzip/payload bzip2/payload xz/payload; do echo "[INSTALL] $$payload -> $(INSTALL_SYSROOT)"; ( cd "$$payload" && tar --exclude='.gitkeep' --exclude='*/.gitkeep' -cf - . ) | ( cd "$(INSTALL_SYSROOT)" && tar -xpf - ); done
 
 clean:
 @rm -rf -- "$(ABS_BUILD_DIR)"
@@ -100,3 +113,4 @@ help:
 @echo "  MUSL_PREFIX=$(MUSL_PREFIX)"
 @echo "  TARGET_TRIPLE=$(TARGET_TRIPLE)"
 @echo "  BUILD_DIR=$(BUILD_DIR)"
+@echo "  MUSL_BLUEYOS_REF=$(MUSL_BLUEYOS_REF)"

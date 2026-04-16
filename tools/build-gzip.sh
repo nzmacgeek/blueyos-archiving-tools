@@ -12,12 +12,14 @@ build="${BUILD_TRIPLE:-x86_64-linux-gnu}"
 
 archive="gzip-${version}.tar.xz"
 url="https://ftp.gnu.org/gnu/gzip/${archive}"
+archive_sha256="${GZIP_SHA256:-a793e107a54769576adc16703f97c39ee7afdd4e78463adcfe8e5bd61262e289}"
 src_root="${build_dir}/src"
 work_root="${build_dir}/work"
 install_root="${build_dir}/install/gzip"
 
 mkdir -p "$src_root" "$work_root" "$install_root" "$stage_dir/usr/bin"
 [[ -f "${src_root}/${archive}" ]] || curl -fsSL "$url" -o "${src_root}/${archive}"
+echo "${archive_sha256}  ${src_root}/${archive}" | sha256sum -c -
 
 rm -rf "${work_root}/gzip"
 mkdir -p "${work_root}/gzip"

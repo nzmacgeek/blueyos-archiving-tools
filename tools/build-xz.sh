@@ -12,12 +12,14 @@ build="${BUILD_TRIPLE:-x86_64-linux-gnu}"
 
 archive="xz-${version}.tar.xz"
 url="https://github.com/tukaani-project/xz/releases/download/v${version}/${archive}"
+archive_sha256="${XZ_SHA256:-0b54f79df85912504de0b14aec7971e3f964491af1812d83447005807513cd9e}"
 src_root="${build_dir}/src"
 work_root="${build_dir}/work"
 install_root="${build_dir}/install/xz"
 
 mkdir -p "$src_root" "$work_root" "$install_root" "$stage_dir/usr/bin"
 [[ -f "${src_root}/${archive}" ]] || curl -fsSL "$url" -o "${src_root}/${archive}"
+echo "${archive_sha256}  ${src_root}/${archive}" | sha256sum -c -
 
 rm -rf "${work_root}/xz"
 mkdir -p "${work_root}/xz"

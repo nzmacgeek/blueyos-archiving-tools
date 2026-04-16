@@ -68,3 +68,8 @@ make install SYSROOT=/mnt/blueyos
 - `TARGET_TRIPLE` — configure `--host` target (default: `i386-linux-musl`)
 - `BUILD_DIR` — build output directory (default: `build`)
 - `CC`, `CFLAGS`, `LDFLAGS` — compiler and flags used for all package builds
+- `MUSL_BLUEYOS_REF` — pinned musl-blueyos git ref used by `make musl`
+
+Each upstream source archive is validated with SHA256 before extraction. Override
+`TAR_SHA256`, `GZIP_SHA256`, `BZIP2_SHA256`, or `XZ_SHA256` only when intentionally
+updating to a new verified upstream artifact.

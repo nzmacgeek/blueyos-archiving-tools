@@ -12,12 +12,14 @@ build="${BUILD_TRIPLE:-x86_64-linux-gnu}"
 
 archive="tar-${version}.tar.xz"
 url="https://ftp.gnu.org/gnu/tar/${archive}"
+archive_sha256="${TAR_SHA256:-6b9824c92deddbd7021801515270211f5252fbd8f57ef926ad45b42e31c2d8c0}"
 src_root="${build_dir}/src"
 work_root="${build_dir}/work"
 install_root="${build_dir}/install/tar"
 
 mkdir -p "$src_root" "$work_root" "$install_root" "$stage_dir/usr/bin"
 [[ -f "${src_root}/${archive}" ]] || curl -fsSL "$url" -o "${src_root}/${archive}"
+echo "${archive_sha256}  ${src_root}/${archive}" | sha256sum -c -
 
 rm -rf "${work_root}/tar"
 mkdir -p "${work_root}/tar"

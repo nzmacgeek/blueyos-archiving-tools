@@ -10,12 +10,14 @@ ldflags="${LDFLAGS:-}"
 
 archive="bzip2-${version}.tar.gz"
 url="https://sourceware.org/pub/bzip2/${archive}"
+archive_sha256="${BZIP2_SHA256:-ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269}"
 src_root="${build_dir}/src"
 work_root="${build_dir}/work"
 install_root="${build_dir}/install/bzip2"
 
 mkdir -p "$src_root" "$work_root" "$install_root" "$stage_dir/usr/bin"
 [[ -f "${src_root}/${archive}" ]] || curl -fsSL "$url" -o "${src_root}/${archive}"
+echo "${archive_sha256}  ${src_root}/${archive}" | sha256sum -c -
 
 rm -rf "${work_root}/bzip2"
 mkdir -p "${work_root}/bzip2"

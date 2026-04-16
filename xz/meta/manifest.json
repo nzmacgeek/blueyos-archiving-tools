@@ -1,0 +1,15 @@
+{
+  "name": "xz",
+  "version": "5.8.1",
+  "arch": "i386",
+  "description": "xz and lzma tools for BlueyOS",
+  "depends": [],
+  "recommends": [],
+  "conflicts": [],
+  "provides": ["unxz", "xzcat", "lzma", "unlzma"],
+  "maintainer": "BlueyOS Maintainers <maintainers@blueyos.example>",
+  "homepage": "https://tukaani.org/xz/",
+  "core": true,
+  "files": [],
+  "scripts": {}
+}

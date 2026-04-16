@@ -23,9 +23,9 @@ if [[ -d "$PREFIX/include" && -f "$PREFIX/lib/libc.a" && ! -d "$PREFIX/.git" ]];
 fi
 
 if [[ ! -d "$PREFIX/.git" ]]; then
-  if [[ -e "$PREFIX" ]] && find "$PREFIX" -mindepth 1 -maxdepth 1 -print -quit | grep -q .; then
+  if [[ -e "$PREFIX" ]] && [[ -n "$(find "$PREFIX" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
     echo "error: --prefix=$PREFIX exists and is not a git checkout." >&2
-    echo "Use an empty build directory, or point --prefix at an already-installed sysroot." >&2
+    echo "Use an empty prefix directory, or point --prefix at an already-installed sysroot." >&2
     exit 1
   fi
   git clone https://github.com/nzmacgeek/musl-blueyos "$PREFIX"

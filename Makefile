@@ -79,7 +79,7 @@ tmp_pkg="$(ABS_BUILD_DIR)/dpk-src/$$pkg"; \
 rm -rf "$$tmp_pkg"; \
 mkdir -p "$(ABS_BUILD_DIR)/dpk-src"; \
 cp -a "$$pkg" "$$tmp_pkg"; \
-find "$$tmp_pkg/payload" -name '.gitkeep' -type f -delete; \
+if [ -d "$$tmp_pkg/payload" ]; then find "$$tmp_pkg/payload" -name '.gitkeep' -type f -delete; fi; \
 dpkbuild build "$$tmp_pkg" --output "$(ABS_BUILD_DIR)/dpk"; \
 done
 @ls -1 "$(ABS_BUILD_DIR)"/dpk/*.dpk

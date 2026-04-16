@@ -20,4 +20,5 @@ if [[ -n "$musl_prefix" && "${musl_prefix##*/}" == "usr" ]]; then
   exit 0
 fi
 
-exit 0
+echo "Unable to resolve install sysroot" >&2
+exit 1

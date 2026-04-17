@@ -14,14 +14,24 @@ archive_sha256="${BZIP2_SHA256:-ab5a03176ee106d3f0fa90e381da478ddae405918153cca2
 src_root="${build_dir}/src"
 work_root="${build_dir}/work"
 install_root="${build_dir}/install/bzip2"
+archive_path="${src_root}/${archive}"
 
 mkdir -p "$src_root" "$work_root" "$install_root" "$stage_dir/usr/bin"
-[[ -f "${src_root}/${archive}" ]] || curl -fsSL "$url" -o "${src_root}/${archive}"
-echo "${archive_sha256}  ${src_root}/${archive}" | sha256sum -c -
+download_archive() {
+  curl -fsSL "$url" -o "$archive_path"
+}
+
+[[ -f "$archive_path" ]] || download_archive
+if ! echo "${archive_sha256}  ${archive_path}" | sha256sum -c - >/dev/null 2>&1; then
+  echo "[SRC] checksum mismatch for ${archive}; redownloading" >&2
+  rm -f -- "$archive_path"
+  download_archive
+fi
+echo "${archive_sha256}  ${archive_path}" | sha256sum -c -
 
 rm -rf "${work_root}/bzip2"
 mkdir -p "${work_root}/bzip2"
-tar -xf "${src_root}/${archive}" -C "${work_root}/bzip2"
+tar -xf "$archive_path" -C "${work_root}/bzip2"
 src_dir="$(find "${work_root}/bzip2" -mindepth 1 -maxdepth 1 -type d | head -n1)"
 
 rm -rf "${install_root}" && mkdir -p "${install_root}/usr"

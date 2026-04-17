@@ -12,18 +12,28 @@ build="${BUILD_TRIPLE:-x86_64-linux-gnu}"
 
 archive="tar-${version}.tar.xz"
 url="https://ftp.gnu.org/gnu/tar/${archive}"
-archive_sha256="${TAR_SHA256:-6b9824c92deddbd7021801515270211f5252fbd8f57ef926ad45b42e31c2d8c0}"
+archive_sha256="${TAR_SHA256:-4d62ff37342ec7aed748535323930c7cf94acf71c3591882b26a7ea50f3edc16}"
 src_root="${build_dir}/src"
 work_root="${build_dir}/work"
 install_root="${build_dir}/install/tar"
+archive_path="${src_root}/${archive}"
 
 mkdir -p "$src_root" "$work_root" "$install_root" "$stage_dir/usr/bin"
-[[ -f "${src_root}/${archive}" ]] || curl -fsSL "$url" -o "${src_root}/${archive}"
-echo "${archive_sha256}  ${src_root}/${archive}" | sha256sum -c -
+download_archive() {
+  curl -fsSL "$url" -o "$archive_path"
+}
+
+[[ -f "$archive_path" ]] || download_archive
+if ! echo "${archive_sha256}  ${archive_path}" | sha256sum -c - >/dev/null 2>&1; then
+  echo "[SRC] checksum mismatch for ${archive}; redownloading" >&2
+  rm -f -- "$archive_path"
+  download_archive
+fi
+echo "${archive_sha256}  ${archive_path}" | sha256sum -c -
 
 rm -rf "${work_root}/tar"
 mkdir -p "${work_root}/tar"
-tar -xf "${src_root}/${archive}" -C "${work_root}/tar"
+tar -xf "$archive_path" -C "${work_root}/tar"
 src_dir="$(find "${work_root}/tar" -mindepth 1 -maxdepth 1 -type d | head -n1)"
 
 rm -rf "${install_root}" && mkdir -p "${install_root}"

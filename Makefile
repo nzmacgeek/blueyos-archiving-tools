@@ -38,7 +38,7 @@ INSTALL_ROOT_INPUT := $(strip $(if $(DESTDIR),$(DESTDIR),$(SYSROOT)))
 INSTALL_SYSROOT := $(shell BLUEYOS_SYSROOT="$(BLUEYOS_SYSROOT)" MUSL_PREFIX="$(MUSL_PREFIX)" bash tools/resolve-install-sysroot.sh "$(INSTALL_ROOT_INPUT)" 2>/dev/null)
 
 .RECIPEPREFIX := @
-.PHONY: all musl clean dpk help install install-staged $(TOOLS)
+.PHONY: all package musl clean dpk help install install-staged $(TOOLS)
 
 .DEFAULT_GOAL := all
 
@@ -114,3 +114,6 @@ help:
 @echo "  TARGET_TRIPLE=$(TARGET_TRIPLE)"
 @echo "  BUILD_DIR=$(BUILD_DIR)"
 @echo "  MUSL_BLUEYOS_REF=$(MUSL_BLUEYOS_REF)"
+
+package: dpk
+	@echo "[DPK] package target complete"

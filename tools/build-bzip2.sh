@@ -39,7 +39,7 @@ rm -rf "${install_root}" && mkdir -p "${install_root}/usr"
 (
   cd "$src_dir"
   make clean
-  make -j"$(nproc)" CC="$cc" CFLAGS="$cflags" LDFLAGS="$ldflags"
+  make CC="$cc" CFLAGS="$cflags" LDFLAGS="$ldflags" libbz2.a bzip2 bzip2recover
   make PREFIX="$install_root/usr" install
 )
 

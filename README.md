@@ -70,6 +70,11 @@ make install SYSROOT=/mnt/blueyos
 - `CC`, `CFLAGS`, `LDFLAGS` — compiler and flags used for all package builds
 - `MUSL_BLUEYOS_REF` — pinned musl-blueyos git ref used by `make musl`
 
+Note: `MUSL_PREFIX` must point at a prefix that includes both musl headers/libs and a
+musl compiler wrapper (for example `bin/musl-gcc`). If `/opt/blueyos-sysroot/usr`
+contains only runtime/sysroot files, the build defaults to `build/musl` and asks you
+to run `make musl` first.
+
 Each upstream source archive is validated with SHA256 before extraction. Override
 `TAR_SHA256`, `GZIP_SHA256`, `BZIP2_SHA256`, or `XZ_SHA256` only when intentionally
 updating to a new verified upstream artifact.

@@ -12,7 +12,7 @@ build="${BUILD_TRIPLE:-x86_64-linux-gnu}"
 
 archive="gzip-${version}.tar.xz"
 url="https://ftp.gnu.org/gnu/gzip/${archive}"
-archive_sha256="${GZIP_SHA256:-a793e107a54769576adc16703f97c39ee7afdd4e78463adcfe8e5bd61262e289}"
+archive_sha256="${GZIP_SHA256:-7454eb6935db17c6655576c2e1b0fabefd38b4d0936e0f87f48cd062ce91a057}"
 src_root="${build_dir}/src"
 work_root="${build_dir}/work"
 install_root="${build_dir}/install/gzip"

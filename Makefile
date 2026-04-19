@@ -19,12 +19,8 @@ endif
 TARGET_TRIPLE ?= i386-linux-musl
 BUILD_TRIPLE  ?= $(shell gcc -dumpmachine 2>/dev/null || echo x86_64-linux-gnu)
 
-MUSL_GCC := $(MUSL_PREFIX)/bin/musl-gcc
-ifeq ($(shell [ -x "$(MUSL_GCC)" ] && echo yes),yes)
-	DEFAULT_CC := $(MUSL_GCC)
-else
-	DEFAULT_CC := gcc
-endif
+MUSL_CC := $(shell MUSL_PREFIX="$(MUSL_PREFIX)" TARGET_TRIPLE="$(TARGET_TRIPLE)" BUILD_DIR="$(ABS_BUILD_DIR)" bash tools/resolve-musl-cc.sh)
+DEFAULT_CC := $(if $(strip $(MUSL_CC)),$(MUSL_CC),gcc)
 ifeq ($(origin CC),default)
 	CC := $(DEFAULT_CC)
 else ifeq ($(origin CC),undefined)
@@ -54,20 +50,32 @@ define check_musl
 if [ ! -d "$(MUSL_PREFIX)/include" ] || [ ! -f "$(MUSL_PREFIX)/lib/libc.a" ]; then echo "[MUSL] musl sysroot not found under $(MUSL_PREFIX)"; echo "       Run: make musl (or provide MUSL_PREFIX=/path/to/sysroot)"; exit 1; fi
 endef
 
+define check_musl_cc
+cc_output="$$("$(CC)" -print-file-name=libc.a 2>&1)"; cc_status=$$?; \
+if [ $$cc_status -ne 0 ]; then echo "[MUSL] Failed to invoke CC=$(CC)"; echo "       $$cc_output"; echo "       Rebuild the musl toolchain with: make musl MUSL_PREFIX=$(MUSL_PREFIX)"; exit 1; fi; \
+libc_path="$$cc_output"; \
+if [ -z "$$libc_path" ] || [ "$$libc_path" = "libc.a" ]; then echo "[MUSL] Unable to resolve libc.a via CC=$(CC)"; echo "       Set CC to a musl compiler (for example: $(MUSL_PREFIX)/bin/musl-gcc)"; exit 1; fi; \
+case "$$libc_path" in "$(MUSL_PREFIX)/lib/libc.a"|*musl*/libc.a) ;; *) echo "[MUSL] CC=$(CC) appears to target glibc ($$libc_path)"; echo "       Set CC to a musl compiler (for example: $(MUSL_PREFIX)/bin/musl-gcc)"; exit 1;; esac
+endef
+
 tar:
 	@$(call check_musl)
+	@$(call check_musl_cc)
 	@TAR_VERSION="$(TAR_VERSION)" BUILD_DIR="$(ABS_BUILD_DIR)" STAGE_DIR="$(CURDIR)/tar/payload" CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" HOST_TRIPLE="$(TARGET_TRIPLE)" BUILD_TRIPLE="$(BUILD_TRIPLE)" bash tools/build-tar.sh
 
 gzip:
 	@$(call check_musl)
+	@$(call check_musl_cc)
 	@GZIP_VERSION="$(GZIP_VERSION)" BUILD_DIR="$(ABS_BUILD_DIR)" STAGE_DIR="$(CURDIR)/gzip/payload" CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" HOST_TRIPLE="$(TARGET_TRIPLE)" BUILD_TRIPLE="$(BUILD_TRIPLE)" bash tools/build-gzip.sh
 
 bzip2:
 	@$(call check_musl)
+	@$(call check_musl_cc)
 	@BZIP2_VERSION="$(BZIP2_VERSION)" BUILD_DIR="$(ABS_BUILD_DIR)" STAGE_DIR="$(CURDIR)/bzip2/payload" CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" bash tools/build-bzip2.sh
 
 xz:
 	@$(call check_musl)
+	@$(call check_musl_cc)
 	@XZ_VERSION="$(XZ_VERSION)" BUILD_DIR="$(ABS_BUILD_DIR)" STAGE_DIR="$(CURDIR)/xz/payload" CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" HOST_TRIPLE="$(TARGET_TRIPLE)" BUILD_TRIPLE="$(BUILD_TRIPLE)" bash tools/build-xz.sh
 
 dpk:
@@ -81,7 +89,7 @@ dpk:
 		if [ -d "$$tmp_pkg/payload" ]; then find "$$tmp_pkg/payload" -name '.gitkeep' -type f -delete; fi; \
 		dpkbuild build "$$tmp_pkg" --output "$(ABS_BUILD_DIR)/dpk"; \
 	done
-	@ls -1 "$(ABS_BUILD_DIR)"/dpk/*.dpk
+	@find "$(ABS_BUILD_DIR)/dpk" "$(CURDIR)" -maxdepth 1 -type f -name '*.dpk' | sort
 
 install: all install-staged
 
@@ -112,6 +120,8 @@ help:
 	@echo "  MUSL_PREFIX=$(MUSL_PREFIX)"
 	@echo "  TARGET_TRIPLE=$(TARGET_TRIPLE)"
 	@echo "  BUILD_DIR=$(BUILD_DIR)"
+	@echo "  MUSL_CC=$(MUSL_CC)"
+	@echo "  CC=$(CC)"
 	@echo "  MUSL_BLUEYOS_REF=$(MUSL_BLUEYOS_REF)"
 
 package: dpk

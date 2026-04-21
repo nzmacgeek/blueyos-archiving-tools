@@ -55,7 +55,9 @@ cc_output="$$("$(CC)" -print-file-name=libc.a 2>&1)"; cc_status=$$?; \
 if [ $$cc_status -ne 0 ]; then echo "[MUSL] Failed to invoke CC=$(CC)"; echo "       $$cc_output"; echo "       Rebuild the musl toolchain with: make musl MUSL_PREFIX=$(MUSL_PREFIX)"; exit 1; fi; \
 libc_path="$$cc_output"; \
 if [ -z "$$libc_path" ] || [ "$$libc_path" = "libc.a" ]; then echo "[MUSL] Unable to resolve libc.a via CC=$(CC)"; echo "       Set CC to a musl compiler (for example: $(MUSL_PREFIX)/bin/musl-gcc)"; exit 1; fi; \
-case "$$libc_path" in "$(MUSL_PREFIX)/lib/libc.a"|*musl*/libc.a) ;; *) echo "[MUSL] CC=$(CC) appears to target glibc ($$libc_path)"; echo "       Set CC to a musl compiler (for example: $(MUSL_PREFIX)/bin/musl-gcc)"; exit 1;; esac
+case "$(CC)" in *musl*) : ;; \
+*) case "$$libc_path" in "$(MUSL_PREFIX)/lib/libc.a"|*musl*/libc.a) ;; *) echo "[MUSL] CC=$(CC) appears to target glibc ($$libc_path)"; echo "       Set CC to a musl compiler (for example: $(MUSL_PREFIX)/bin/musl-gcc)"; exit 1;; esac ;; \
+esac
 endef
 
 tar:
